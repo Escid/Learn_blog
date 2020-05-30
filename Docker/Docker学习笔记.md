@@ -1,6 +1,6 @@
 # Docker的架构图
 
-![image-20200530094819464](/Users/shelter/Library/Application Support/typora-user-images/image-20200530094819464.png)
+![image-20200530094819464](../Images/image-20200530094819464.png)
 
 # Docker的基本组成
 
