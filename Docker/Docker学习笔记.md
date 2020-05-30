@@ -139,7 +139,7 @@
 
 # Docker镜像
 
-## 镜像是什么？
+## 是什么？
 
 - 镜像是一种轻量级、可执行的独立软件包，***用来打包软件运行环境和基于运行环境开发的软件***，它包含运行某个软件所需的所有内容，包括代码、运行时、库、环境变量和配置文件
 
@@ -171,7 +171,7 @@
 
 # Docker容器数据卷
 
-## 容器数据卷是什么？
+## 是什么？
 
 - docker容器产生的数据，如果不通过docker commit，生成新的镜像，使得数据做为镜像的一部分保存下来，那么当容器删除后，数据自然也就没了，但是我们是希望***数据持久化的，容器之间可以共享数据***
 
@@ -241,11 +241,121 @@
 
 # Dockerfile
 
+## 是什么？
 
+- Dockerfile是用来构建Docker镜像的构建文件，是由一系列命令和参数构成的脚本
+- 构建三步骤
+  - 编写Dockerfile文件
+  - ```docker build```
+  - ```docker run```
 
+## Dockerfile构建过程解析
 
+- Dockerfile内容基础知识
+  - 每条保留字指令都必须为大写字母且后面要跟随至少一个参数
+  - 指令按照从上到下，顺序执行
+  - '#' 表示注释
+  - 每条指令都会创建一个新的镜像层，并对镜像进行提交
+- docker执行Dockerfile的大致流程
+  - docker从基础镜像运行一个容器
+  - 执行一条指令并对容器作出修改
+  - 执行类似```docker commit```的操作提交一个新的镜像层
+  - docker再基于刚提交的镜像运行一个新容器
+  - 执行Dockerfile中的下一个指令直到所有的指令都执行完成
+- 小总结
+  - 从应用软件的角度来看，Dockerfile、docker镜像与docker容器分别代表软件的三个不同阶段
+  - Dockerfile是应用软件的原材料
+  - docker镜像是软件的交付品
+  - docker容器则可以认为是软件的运行态
+  - Dockerfile面向开发，docker镜像成为交付标准，docker容器则涉及部署与运维，三者缺一不可，合力充当docker体系的基石
+  - ![image-20200530175807293](../Images/image-20200530175807293.png)
 
+## Dockerfile保留字指令
 
+- FROM
+  - 基础镜像，当前新镜像是基于哪个镜像的
+- MAINTAINER
+  - 镜像维护者的姓名和邮箱地址
+- RUN
+  - 容器构建时需要的命令
+- EXPOSE
+  - 当前容器对外暴露的端口
+- WORKDIR
+  - 指定创建容器后，终端默认登陆进来工作目录，一个落脚点
+- ENV
+  - 用来在构建镜像镜像过程中设置环境变量
+    - ```ENV MY_PATH /usr/mypath```：这个指定环境变量可以在后续的任何RUN指令中使用，这就如同在命令前面指定了环境变量前缀一样，也可以直接在其他指令中直接使用这些环境变量
+- ADD
+  - 将宿主机目录下的文件拷贝进镜像且ADD命令会自动处理URL和解压tar压缩包
+- COPY
+  - 类似ADD，拷贝文件和目录到镜像中，将从构建上下文目录中<源路径>的文件/目录复制到新的一层镜像内的<目标路径>位置
+    - ```COPY src dest ```
+    - ```COPY ["src","dest"]```
+- VOLUME
+  - 容器数据卷，用于数据保存和持久化工作
+- CMD
+  - 指定一个容器启动时要运行的命令
+  - Dockerfile中可以有多个CMD命令，但只有最后一个生效，CMD会被```docker container run```之后的参数替换
+    - CMD 容器启动命令
+    - CMD 指令的格式和 RUN 相似，也是两种格式
+      - ```shell```格式：```CMD <命令>```
+      - ```exec```格式：```CMD ["可执行文件","参数1","参数2",...]```
+      - 参数列表格式：```CMD ["参数1","参数2"...]```，在指定的```ENTRYPOINT```指令后，用```CMD```指定具体的参数
+- ENTRYPOINT
+  - 指定一个容器启动时要运行的命令
+  - ENTRYPOINT的目的和CMD一样，都是在指定容器启动程序及参数
+- ONBUILD
+  - 当构建一个被继承的Dockerfile是运行命令，父镜像在被子继承后父镜像的ONBUILD被触发
+
+## Dockerfile案例
+
+- Base镜像（scratch）
+
+  - Docker Hub中99%的镜像都是通过在base镜像中安装和配置需要的软件构建出来的
+
+- 自定义镜像
+
+  - 编写
+
+    - ```dockerfile
+      FROM centos
+      ENV mypath /tmp
+      WORKDIR $mypath
+      RUN yum -y install vim
+      RUN yum -y install net-tools
+      EXPOSE 80
+      CMD /bin/bash
+      ```
+
+    - 
+
+  - 构建
+
+    - ```docker build -t 新镜像名字:TAG .  或 docker build -t 新镜像名字:TAG -f Dockerfile .```
+
+  - 运行
+
+    - ![image-20200530224328581](../Images/image-20200530224328581.png)
+    - ![image-20200530224713388](../Images/image-20200530224713388.png)
+    - ![image-20200530233523929](../Images/image-20200530233523929.png)
+    - 此时登陆到docker中间的初始目录就是我们定义的```WORKDIR```，并且当前的```ifconfig```和```vim```命令就已经默认安装好了
+
+  - 列出镜像的变更历史
+
+    - ```docker history 镜像名/镜像ID```列出镜像的变更历史
+    - ![image-20200530234025465](../Images/image-20200530234025465.png)
+
+- CMD/ENTRYPOINT镜像案例
+
+  - 都是指定一个容器启动时要运行的命令
+  - CMD
+    - Dockerfile中可以有多个CMD指令，但只有最后一个生效，CMD会被```docker container run```之后的参数替换
+  - ENTRYPOINT
+    - ```docker container run```之后的参数会被当作参数传递给ENTRYPOINT，之后形成新的命令组合
+
+- 一份完整的Dockerfile
+
+  - ![image-20200531012106002](../Images/image-20200531012106002.png)
 
 
 
