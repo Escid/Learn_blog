@@ -1,0 +1,224 @@
+## MySQL介绍
+
+### 数据库的好处
+
+- 持久化数据到本地
+- 可以实现结构化查询，方便管理
+
+### 数据库的概念
+
+#### DB
+
+数据库（database）：存储数据的“仓库”。它保存了一系列有组织的数据
+
+#### DBMS
+
+数据库管理系统（Database Management System ）。数据库是通过DBMS创建和操作的容器
+
+#### SQL
+
+结构化查询语句（Structure Query Language）：专门用来与数据库通信的语言
+
+> SQL的优点：
+>
+> > 不是某个特定的数据库提供商专有的语言，几乎所有的DBMS都支持SQL
+> >
+> > 简单易学
+> >
+> > 虽然简单，但实际上是一种强有力的语言，灵活使用其语言元素，可以进行非常复杂和高级的数据库操作
+
+### 数据库的特点
+
+- 将数据放到表中，表再放到库中
+- 一个数据库中可以有多张表，每一个表都有一个名字，用来标识自己。表名具有唯一性
+- 表具有一些特性，这个特性定义了数据在表中如何存储，类似java中“类”的设计
+- 表由列组成，我们也称为字段。所有的表都由一个或列组成的，每一列类似java中的“属性”
+- 表中的数据是按行存储的，每一行类似java中的“对象”
+
+#### DBMS分为两类
+
+- 基于共享文件系统的DBMS（Access）
+- 基于客户机-服务器的DBMS（MySQL、Oracle、SqlServer）
+
+#### MySQL的启动与停止
+
+```tex
+net start mysql  # 启动mysql
+net stop  mysql  # 关闭mysql 
+```
+
+#### MySQL的服务端的登录和退出
+
+```TE
+mysql -uroot -p -hlocalhost -P3306
+```
+
+![image-20200610193849250](images/image-20200610193849250.png)
+
+
+
+### MySQL的常见命令
+
+- ```show databases;```：获取到当前存在哪些库
+- ```muse test;```：进入到一个具体的库中
+- ```show tables;```：查看一个库中所有的表（前提的是已经进入到了一个具体的库中了）；也可以使用```show tables from test;```直接查看test这个库中所有表，但是使用这样的方式并不会切换库
+- ```select database();```：获取当前进入的是哪个库
+- ```create table stuinfo (id int, name varchar(20));```：创建一张表
+- ```desc stuinfo;```：获取一个表的结构
+- ```select * from stuinfo;```：获取一个表中所有的数据
+- ```insert into stuinfo (id,name) values (1,"shelter");```：向一个表中插入数据
+- ```update stuinfo set name = "escid" where id = 1;```：更新一张表中的某一个字段
+- ```select version();```：获取mysql的版本信息
+
+### MySQL的语法规范
+
+- 不区分大小写，但建议关键字大写，表名、列表小写
+- 每条命令最好用分号结尾
+- 每条命令根据需要，可以进行缩进或换行
+- 注释
+  - 单行注释：```# 注释文字``` 或 ```-- 注释文字``` ，这里注意 -- 后面是有一个空格的
+  - 多行注释：```/* 注释文字 */ ```
+
+### DQL语言的学习
+
+#### 基础查询
+
+> 语法：select 查询列表 from 表名;
+>
+> 特点：
+>
+> 1、查询列表可以是：表中的字段、常量值、表达式、函数
+>
+> 2、查询的结果是一个虚拟的表格
+
+- 查询表中的单个字段
+  - ```SELECT last_name FROM employees;```
+- 查询表中的多个字段
+  - ```SELECT last_name,salary,email FROM employees;```
+- 查询表中的所有字段
+  - ```SELECT * FROM employees```
+- 查询常量值
+  - ```SELECT 100;```
+  - ```SELECT 'JOHN';```
+- 查询表达式
+  - ```SELECT 100 * 98;```
+- 查询函数
+  - ```SELECT VERSION();```
+- 起别名（便于理解；如果要查询的字段有重名的情况，使用别名可以区分开来）
+  - ```SELECT 100%98 AS RESULT;```
+  - ```SELECT last_name 姓,first_name 名FROM employees;```，使用这个方式可以省略中间的AS
+  - 如果在使用别名的时候，别名中间存在有特殊符号或者别名中存在有关键字，这个时候可以将别名加上单/双引号（MySQL推荐使用双引号）
+- 去重
+  - ```SELECT DISTINCT department_id FROM employees;```
+- \+ 号的作用（在MySQL中间的\+仅仅只有一个功能：运算符）
+  - ```SELECT 100+90 AS out_data;```
+  - ```SELECT '123'+90;```：如果一方为字符型，则试图将字符型转换数值型，如果转换成功，则继续做加法运算，如果转换失败，则将字符型转为0，再进行加法运算
+  - ```SELECT NULL+10;```：只要其中一方为NULL，则结果肯定为NULL
+  - 在MySQL中想要实现多个字段查询结果的拼接，可以使用CONCAT函数：```SELECT CONCAT(str1,str2,str3);```
+- 查询对NULL进行默认值处理
+  - ```SELECT IFNULL(age,20) FROM employees;```：在进行查找的时候，如果字段为NULL，则会设定为一个默认的20
+
+#### 条件查询
+
+> 语法：select 查询列表 from 表名 where 筛选条件
+>
+> 特点：
+>
+> 1、按条件表达式筛选，条件运算符：>	<	=	!=	<>
+>
+> 2、按逻辑表达式筛选，逻辑运算符：&&	||	!	但是在MySQL中推荐使用的是and、or、not
+>
+> > 作用：用于连接条件表达式
+> >
+> > && 和 and：两个条件都为true，结果为true，否则为false
+> >
+> > || 和 or：只有一个条件为true，结果为true，否则为false
+> >
+> > ! 或 not：如果连接的条件为本身为false，结果为true，否则为false
+>
+> 3、模糊查询：like、between  and、in、is null
+>
+> > like 一般和通配符搭配使用，% 表示任意多个字符
+> >
+> > 使用 between and 可以提高语句的简洁度（包含临界值；两个临界值的顺序不能颠倒）
+> >
+> > in 判断某字段的值是否属于in列表中的一项（使用in提高语句简洁度、in列表的值类型必须一致或兼容）
+>
+> **安全等于  <=>**
+
+- 按条件表达式筛选
+  - ```SELECT * FROM employees WHERE salary > 10000;```
+  - ```SELECT last_name,department_id FROM employees WHERE department_id <> 90;```
+- 按逻辑表达式筛选
+  - ```SELECT last_name,salary,commission_pct FROM employees WHERE salary >=10000 AND salary <= 20000;```
+  - ```SELECT * FROM employees WHERE department_id < 90 OR department_id > 110 OR salary > 15000;```
+- 模糊查询
+  - ```SELECT * FROM employees WHERE last_name LIKE '%a%';```，这里的 % 代表的是通配符(包含0个字符)，_ 任意单个字符
+  - ```SELECT last_name FROM employees WHERE last_name LIKE '__e_a%';```
+  - ```SELECT last_name FROM employees WHERE last_name LIKE '_\_%';```，这里的 \ 是一个转义符
+  - ```SELECT last_name FROM employees WHERE last_name LIKE '_$_%' ESCAPE '$';```，这里使用ESCAPE申明$不需要进行转义
+  - ```SELECT  * FROM employees WHERE employee_id BETWEEN 100 AND 120;```
+  - ```SELECT * FROM employees WHERE job_id IN('IT_PROT','AD_VP','AD_PRES')```，在使用in的时候，不能在中间使用%
+  - ```SELECT * FROM employees WHERE a IS NULL; ```，对应的就是 IS NOT NULL，这里也是可以使用```<=> NULL```
+
+#### 排序查询
+
+> 语法：select 查询列表 from 表 [where 筛选条件] order by 排序列表 asc|desc
+>
+> 特点：
+>
+> > asc代表的是升序，desc代表的是降序，如果不写，默认是升序
+> >
+> > order by 子句中可以支持单个字段、多个字段、表达式、函数、别名
+> >
+> > order by 子句一般是放在查询语句的最后面，limit子句除外
+
+- 查询结果从高到低进行排序
+  - ```SELECT * FROM employees ORDER BY salary DESC;```
+- 查询结果从低到高进行排序
+  - ```SELECT * FROM employees ORDER BY salary ASC```，如果后面没有跟上ASC，则表示默认就是升序排列
+- 查询时候存在筛选条件，并且结果按照另一个字段进行排序
+  - ```SELECT * FROM employees WHERE department_id >= 90 ORDER BY hiredate asc;```
+- 按表达式排序
+  - ```SELECT *,salary*12*(1+IFNULL(commission_pct,0)) AS 年薪 FROM employees ORDER BY salary*12*(1+IFNULL(commission_pct,0)) DESC;```
+- 按别名排序
+  - ```SELECT *,salary*12*(1+IFNULL(commission_pct,0)) AS 年薪 FROM employees ORDER BY 年薪 DESC;```
+- 按函数排序
+  - ```SELECT LENGTH(last_name) AS 字节长度,last_name,salary FROM employees ORDER BY LENGTH(last_name) DESC;```
+- 按多个字段排序
+  - ```SELECT * FROM employees ORDER BY salary ASC,employ_id DESC;```
+
+#### 常见函数
+
+> 概念：类似Java中的方法，将一组逻辑语句封装在方法体中，对外暴露方法名
+>
+> 好处：1、隐藏了具体的实现细节；2、提高代码的重用性
+>
+> 调用：select 函数名(实参列表) [from 表]
+>
+> 特点：
+>
+> 1、叫什么（函数名）
+>
+> 2、干什么（函数的功能）
+>
+> 分类：
+>
+> 单行函数：如 concat、length、ifnull
+>
+> 分组函数：主要用于做统计使用，又称为统计函数、聚合函数、组函数
+
+##### 字符函数
+
+- length 获取参数值的字节个数
+  - ```SELECT LENGTH('john')```，这里得到的结果是4
+  - ```SELECT LENGTH('张三丰hahaha')```，这里得到的结果是15，一个中文占据3个字节，当然，这个是根据字符集来进行判断的
+
+### DML语言的学习
+
+
+
+### DDL语言的学习
+
+
+
