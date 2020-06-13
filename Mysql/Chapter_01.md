@@ -213,12 +213,176 @@ mysql -uroot -p -hlocalhost -P3306
 - length 获取参数值的字节个数
   - ```SELECT LENGTH('john')```，这里得到的结果是4
   - ```SELECT LENGTH('张三丰hahaha')```，这里得到的结果是15，一个中文占据3个字节，当然，这个是根据字符集来进行判断的
+- concat 拼接字符串
+  - ```SELECT CONCAT('aaa',',','cccc')```，这样得到的结果是```aaa,cccc```
+- upper 和 lower
+  - ```SELECT UPPER('beijing')```得到的结果是```BEIJING```，同理使用lower就能够将大写编程小写
+- substr、substring，索引是从1开始的
+  - ```SELECT SUBSTR('我爱北京天安门',5)```，通过这样的方式就能够将中间的```天安门```进行获取
+  - ```SELECT SUBSTR('我爱北京天安门',3,2)```，这里给定的两个参数，第一个参数表示从哪个位置开始截取，第二个参数表示截取多长的字符，这里注意是字符，并不是字节
+- instr用于获取子串在全字符串中的第一次出现的起始索引，如果没有则返回0
+  - ```SELECT INSTR('hello world','world');```
+- trim用于将获取的内容左右的空格去掉，如果想要去掉指定的内容，则需要将内容进行申明
+  - ```SELECT TRIM('  hello world   ');``` 
+  - ```SELECT TRIM('#' FROM'#######hello#####world#########');```  得到的结果就是 hello#####world，这里除了可以使用到单个字符，也可以用到一个字符串
+- lpad、rpad
+  - ```SELECT LPAD('hello',10,'*') AS out_put;```，这里使用左填充，将 * 填充在 hello 的左边，并且填充完成之后的总长度是10
+  - ```SELECT RPAD('hello',10,'*') AS out_put;```，这里使用右填充
+- replace 替换
+  - ```SELECT REPLACE('hello world','world','china') AS out_put;```
 
-### DML语言的学习
+##### 数学函数
 
+- round 四舍五入
+  - ```SELECT ROUND(1.65);``` 得到的就是2
+- ceil 向上取整，返回>=该参数的最小整数
+  - ```SELECT CEIL(1.52);```得到的结果是2
+- floor 向下取整，返回<=该参数的最大整数
+  - ```SELECT FLOOR(1.98);```
+- truncate 截断
+  - ```SELECT TRUNCATE(1.65,1);```得到的返回结果是1.6，这里表示的是将一个小数后面截断几位
+- mod 取余
+  - ```SELECT MOD(10,3);```这里取余得到的结果就是1
 
+##### 日期函数
 
-### DDL语言的学习
+- now 获取当前系统日期+时间
+  - ```SELECT NOW();``
+- curdate 返回当前系统日期，不包含时间
+  - ```SELECT CURDATE();```
+- curtime 返回当前系统时间，不包含日期
+  - ```SELECT CURTIME();```
+- 可以获取指定的部分：年、月、日、小时、分钟、秒
+  - ```SELECT YEAR(NOW());``` 获取当前的年份
+  - ```SELECT MONTH(NOW());``` 获取当前的月份
+  - ```SELECT MONTHNAME(NOW());``` 获取当前月份的名字
+- str_to_date：将日期格式的字符串转换成指定格式的日期
+  - ```SELECT STR_TO_DATE('13-6-2020','%d-%m-%Y');```
+- date_format：将日期转为字符
+  - ```SELECT DATE_FORMAT(NOW(),'%d-%m-%Y');```
+
+##### 其他函数
+
+```mysql
+SELECT VERSION();  # 获取当前数据库的版本
+SELECT DATABASE();  # 获取当前所处的数据库
+SELECT USER();  # 获取当前登陆的用户
+```
+
+##### 流程控制函数
+
+- if 函数：if  else  的效果
+
+  - ```SELECT IF(10>5,'true','false');``` mysql中间的if其实和三目运算符差不多的意思，如果第一个条件成立，则返回第二个参数的结果，否则返回第三个参数的结果
+
+- case 函数的使用一：switch case 的效果
+
+- > 语法：
+  >
+  > case 要判断的字段或表达式
+  >
+  > when 常量1 then 要显示的值1或语句1;
+  >
+  > when 常量2 then 要显示的值2或语句2;
+  >
+  > ...
+  >
+  > else 要显示的值n或语句n;
+  >
+  > end
+
+  - ```mysql
+    SELECT
+    	salary 原始工资,
+    	department_id
+    CASE
+    	department_id 
+    	WHEN 30 THEN
+    	salary * 1.1 
+    	WHEN 40 THEN
+    	salary * 1.2 
+    	WHEN 50 THEN
+    	salary * 1.3 ELSE salary 
+    	END AS 新工资 
+    FROM
+    	employees;
+    ```
+
+- case 函数的使用二：类似于 多重 if
+
+- > 语法：
+  >
+  > case
+  >
+  > when 条件1 then 要显示的值1或语句1
+  >
+  > when 条件2 then 要显示的值2或语句2
+  >
+  > ...
+  >
+  > else 要显示的值n或语句n
+  >
+  > end
+
+  - ```mysql
+    SELECT
+    	salary
+    CASE
+    	
+    	WHEN salary > 20000 THEN
+    	'A' 
+    	WHEN salary > 15000 THEN
+    	'B' 
+    	WHEN salary > 10000 THEN
+    	'C' ELSE 'D' 
+    	END AS '工资级别' 
+    FROM
+    employees;
+    ```
+
+##### 分组函数
+
+> 功能：用作统计使用，又称为聚合函数或统计函数或组函数
+>
+> 分类：
+>
+> sum：求和；avg：平均值；max：最大值；min：最小值；count：计算个数
+
+- 简单的使用
+
+  - ```SELECT SUM(salary) FROM employees;```
+  - ```SELECT AVG(salary) FROM employees;```
+  - ```SELECT MIN(salary) FROM employees;```
+  - ```SELECT MAX(salary) FROM employees;```
+  - ```SELECT COUNT(salary) FROM employees;```
+
+- 参数支持哪些类型
+
+  - SUM 和 AVG 仅适合处理数值型的参数，其他的类型不会报错，但是已经没有意义了
+  - MAX、MIN、COUNT 可以处理任何类型
+
+- 是否忽略NULL值
+
+  - 在使用这些分组函数的时候都是已经忽略了NULL值的
+
+- 可以和 distinct 搭配去重的运算
+
+  - ```SELECT SUM(DISTINCT salary) FROM employees;```
+
+- count 函数的详细介绍
+
+  - ```SELECT COUNT(salary) FROM employees;``` 在使用这样的方式进行统计的时候，会忽略NULL行
+
+  - ```SELECT COUNT(*) FROM employees;``` 通常使用这样的方式来统计一个数据库中的总行数，只要一行中有一个不是NULL就会被统计上
+
+  - ```SELECT COUNT(1) FROM employees;``` 这里除了1也能是其他的常量值，相当于在数据表中加了一列都是1的内容，然后统计这一列，其实这个和count(\*)的结果是一样的
+
+  - 效率：MYISAM 存储引擎下，count(\*) 的效率最高，因为这个存储引擎中，直接就有一个计数器，直接返回数字，效率很高；INNODB 存储引擎下，count(\*)和count(1)的效率差不多，比count(字段)要高
+
+    INNODB 存储引擎下，count(*)和count(1)的效率差不多，比count(字段)要高
+
+- 和分组函数一同查询的字段有限制
+  - 和分组函数一同查询的字段要求是 gourp by 后的字段
 
 
 
