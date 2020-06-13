@@ -235,6 +235,7 @@ mysql -uroot -p -hlocalhost -P3306
 
 - round 四舍五入
   - ```SELECT ROUND(1.65);``` 得到的就是2
+  - ```SELECT ROUND(1.689,2);``` round 后面支持第二个参数，表示保留小数点后面几位，这里指定保留的是小数点后面两位，结果为1.69
 - ceil 向上取整，返回>=该参数的最小整数
   - ```SELECT CEIL(1.52);```得到的结果是2
 - floor 向下取整，返回<=该参数的最大整数
@@ -256,6 +257,8 @@ mysql -uroot -p -hlocalhost -P3306
   - ```SELECT YEAR(NOW());``` 获取当前的年份
   - ```SELECT MONTH(NOW());``` 获取当前的月份
   - ```SELECT MONTHNAME(NOW());``` 获取当前月份的名字
+- datediff：获取两个日期相差的天数
+  - ```SELECT DATEDIFF('2020-6-13','2020-6-2');```
 - str_to_date：将日期格式的字符串转换成指定格式的日期
   - ```SELECT STR_TO_DATE('13-6-2020','%d-%m-%Y');```
 - date_format：将日期转为字符
@@ -383,6 +386,94 @@ SELECT USER();  # 获取当前登陆的用户
 
 - 和分组函数一同查询的字段有限制
   - 和分组函数一同查询的字段要求是 gourp by 后的字段
+
+##### 分组查询
+
+> 引入：需要获取每个部门的平均工资
+>
+> 语法：
+>
+> select 分组函数,列(要求出现在group by的后面)
+>
+> from 表
+>
+> [where 筛选条件]
+>
+> group by 分组的列表
+>
+> [order by 子句]
+>
+> ***注意***：查询列表比较特殊，要求是 分组函数 和 group by 后出现的字段
+
+- 查询每个工种的最高工资（简单分组查询）
+
+  - ```SELECT MAX(salary),job_id FROM employees GROUP BY job_id;```
+
+- 查询每个位置上的部门个数（简单分组查询）
+
+  - ```SELECT COUNT(*),location_id FROM employees GROUP BY location_id;```
+
+- 查询邮箱中包含a字符的，每个部门的工资
+
+  - ```SELECT AVG(salary),department_id FROM employees WHERE email LIKE '%a%' GROUP BY department_id```
+
+- 查询有奖金的每个领导手下的最高工资
+
+  - ```SELECT MAX(salary),manager_id FROM employees WHERE commission_pct IS NOT NULL GROUP BY manager_id;```
+
+- 查询哪个部门的员工个数 > 2(添加分组后的筛选)
+
+- > 首先查询每一个部门的员工个数；根据查询的个数进行筛选，查询哪个部门的员工人员 > 2
+
+  - ```SELECT COUNT(*),department_id FROM employees GROUP BY department_id;``` 这里首先获取到每个部门的员工个数
+  - ```SELECT COUNT(*),department_id FROM employees GROUP BY department_id HAVING COUNT(*) > 2;```  这里基于前面获取到的每个部门员工个数的前提下得到员工个数 > 2的
+
+- 查询每个工种有奖金的员工的最高工资 > 12000的工种编号和最高工资
+
+  - 查询每个工种有奖金的员工的最高工资
+    - ```SELECT MAX(salary),job_id FROM employees WHERE commission_pct IS NOT NULL GROUP BY job_id;```
+  - 根据上面的结果继续筛选，最高工资大于12000
+    - ```SELECT MAX(salary),job_id FROM employees WHERE commission_pct IS NOT NULL GROUP BY job_id HAVING MAX(salary) > 12000;```
+
+- 查询领导编号 > 102的每个领导手下的最低工资 > 5000 的领导编号是哪个，以及其工资
+
+  - 查询每个领导手下的员工固定最低工资
+    - ```SELECT MIN(salary),manager_id FROM employees GROUP BY manager_id;```
+  - 添加筛选条件：编号 > 102
+    - ```SELECT MIN(salary),manager_id FROM employees WHERE manager_id > 102 GROUP BY manager_id;```
+  - 添加筛选条件：最低工资 > 5000
+    - ```SELECT MIN(salary),manager_id FROM employees WHERE manager_id > 102 GROUP BY manager_id HAVING MIN(salary) > 5000;```
+
+> 分组查询小结：
+>
+> 一、分组查询中的筛选条件分成两类
+>
+> |  筛选条件  |     数据源     |        位置         | 关键字 |
+> | :--------: | :------------: | :-----------------: | :----: |
+> | 分组前筛选 |     原始表     | group by 子句的前面 | where  |
+> | 分组后筛选 | 分组后的结果集 | group by 子句的后面 | having |
+>
+> 分组函数做条件肯定是放在having子句中
+>
+> 能用分组前筛选的，尽量选择分组前筛选，这是一个性能的问题
+
+- 按表达式或函数进行分组（group by）
+  - 前面介绍的 group by 后面基本就是某一个字段，其实 group by 后面也是能够放一个表达式或函数的
+    - 按员工姓名额长度分组，查询每一组员工的个数，筛选员工个数 > 5 的有哪些
+      - 查询每个长度的员工个数：```SELECT COUNT(*),LENGTH(last_name) AS len_name FROM employees GROUP BY LENGTH(last_name);```
+      - 添加筛选条件：```SELECT COUNT(*),LENGTH(last_name) AS len_name FROM employees GROUP BY LENGTH(last_name) HAVING COUNT(*) > 5;```
+- 按多个字段进行分组（group by）
+  - 查询每个部门每个工种的员工的平均工资
+    - ```SELECT AVG(salary),department_id,job_id FROM employees GROUP BY department_id,job_id;```
+- 添加排序
+  - 查询每个部门每个工种的员工的平均工资，并且按平均工资的高低显示
+    - ```SELECT AVG(salary),department_id,job_id FROM employees GROUP BY department_id,job_id ORDER BY AVG(salary);```
+
+> 分组查询小结：
+>
+> 二、group by 子句支持单个字段分组，多个字段分组（多个字段用逗号隔开，没有顺序要求），表达式或函数
+>
+> 三、也可以添加排序（排序放在整个分组查询的最后）
 
 
 
