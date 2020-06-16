@@ -241,6 +241,292 @@ TRUNCATE TABLE boys
 
 5、truncate删除不能回滚，delete删除可以回滚
 
+### DDL语言
+
+> 数据定义语言
+>
+> 库和表的管理
+>
+> 一、库的管理
+>
+> 创建、修改、删除
+>
+> 二、表的管理
+>
+> 创建、修改、删除
+>
+> 
+>
+> 创建：create
+>
+> 修改：alter
+>
+> 删除：drop
+
+#### 库的管理
+
+##### 库的创建
+
+> 语法：create database 库名;
+
+```CREATE DATABASE books``` 这样的方式对于不存在的库可能正常执行，但是如果存在对应的表则会报错，这个时候可以使用 ```CREATE DATABASE IF NOT EXISTS books```
+
+##### 库的修改
+
+> 一般情况下是不进行修改的
+
+```RENAME DATABASE books TO 新库名``` 该语句在之前还能够使用，在现在已经废弃掉了
+
+**更改库的字符集**
+
+```ALTER DATABASE books CHARACTER SET gbk;```
+
+##### 库的删除
+
+```DROP DATABASE books``` 如果这个库已经删除了，使用这个sql则会报错，可以使用```DROP DATABASE IF EXISTS books```
+
+#### 表的管理
+
+##### 表的创建
+
+> 语法：
+>
+> create table 表名 (
+>
+> ​	列名 列的类型[(长度) 约束],
+>
+> ​	列名 列的类型[(长度) 约束],
+>
+> ​	......
+>
+> )
+
+1、创建表books
+
+```
+CREATE TABLE books(
+  id INT, # 书的编号
+  b_name VARCHAR(20),  # 书名
+  price DOUBLE,  # 价格
+  author VARCHAR(20),  # 作者
+  publish_data DATETIME  # 出版日期
+)
+```
+
+2、创建表author
+
+```mysql
+CREATE TABLE author(
+  id INT,
+  au_name VARCHAR(20),
+  nation VARCHAR(10)
+)
+```
+
+##### 表的修改
+
+> alter table 表名 add/drop/modify/change column 列名 [列类型 约束]
+
+1、修改列名
+
+```mysql
+ALTER TABLE books CHANGE COLUMN publish_date pubDate DATETIME;
+```
+
+2、修改列的类型或约束
+
+```mysql
+ALTER TABLE books MODIFY COLUMN pubDate TIMESTAMP;
+```
+
+3、添加新列
+
+```mysql
+ALTER TABLE books ADD COLUMN annual DOUBLE;
+```
+
+4、删除列
+
+```mysql
+ALTER TABLE books DROP COLUMN annual DOUBLE;
+```
+
+5、修改表名
+
+```mysql
+ALTER TABLE books RENAME TO books_s
+```
+
+##### 表的删除
+
+```mysql
+DROP TABLE author;
+```
+
+##### 表的复制
+
+1、仅仅复制表的结构
+
+```mysql
+CREATE TABLE stuinfo_copy LIKE stuinfo;
+```
+
+2、复制表的结构 + 全部数据
+
+```mysql
+CREATE TABLE stuinfo_copy_2 SELECT * FROM stuinfo;
+```
+
+3、只复制部分数据
+
+```mysql
+CREATE TABLE stuinfo_copy3 
+SELECT id,au_name 
+FROM stuinfo 
+WHERE nation = '中国';
+```
+
+4、仅仅复制某些字段
+
+```mysql
+CREATE TABLE stuinfo_copy3
+SELECT id,au_name
+FROM author
+WHERE 1=2;
+```
+
+### 常见的数据类型
+
+> 数值型
+>
+> - 整型
+> - 小数
+>   - 定点数
+>   - 浮点数
+>
+> 字符型
+>
+> - 较短的文本
+>   - char、varchar
+> - 较长的文本
+>   - text、blob（较长的二进制数据）
+>
+> 日期型
+
+#### 整型
+
+| 整数类型    | 字节 | 范围                                  |
+| ----------- | ---- | ------------------------------------- |
+| tinyint     | 1    | 有符号：-128～127；无符号0～255       |
+| smallint    | 2    | 有符号：-32768～32768；无符号0～65535 |
+| mediumint   | 3    | 很大                                  |
+| int/integer | 4    | 很大                                  |
+| bigint      | 8    | 很大                                  |
+
+> 特点：
+>
+> 1、如果不设置无符号或有符号，默认是有符号；如果想要设置无符号，需要添加 UNSIGNED 关键字
+>
+> 2、如果插入的数值超出了整型的范围，会报out of range 异常，并且插入的是临界值
+>
+> 3、如果不设置长度，会有默认的长度
+>
+> 4、在设置类型时括号中的长度代表了显示的组大宽度，如果不够会用0在左边填充（必须搭配zerefill使用），例如int(7)并不是表示最大只能支持7的长度，而是代表的显示的长度
+
+1、如何设置无符号和有符号
+
+```mysql
+CREATE TABLE tab_int(
+  t1 INT
+  t2 INT UNSIGNED  # 这里设置的t2字段就是无符号的
+)
+```
+
+#### 小数
+
+| 浮点数类型 | 字节 | 范围                                                      |
+| ---------- | ---- | --------------------------------------------------------- |
+| float      | 4    | 很大                                                      |
+| double     | 8    | 很大                                                      |
+| 定点数类型 | 字节 | 范围                                                      |
+| DEC(M,D)/  | M+2  | 最大取值和double相同，给定decimal的有效取值范围由M和D决定 |
+
+> 1、浮点型
+>
+> - float(M,D)
+> - double(M,D)
+>
+> 2、定点型
+>
+> - dec(M,D)
+> - decimal(M,D)
+>
+> 特点：
+>
+> 1、M和D
+>
+> M：整数部位 + 小数部位
+>
+> D：小数部位
+>
+> 如果查过范围，则插入临界值0
+>
+> 2、M和D都可以省略，如果是decimal，则M默认是10，D默认是0；如果是float或double，则会根据插入的数值的精度来决定精度
+>
+> 3、定点型的精度较高，如果要求插入数值的精度较高如货币运算则考虑使用
+
+```mysql
+CREATE TABLE tab_float(
+	f1 FLOAT(5,2),
+	f2 DOUBLE(5,2),
+	f3 DECIMAL(5,2)
+);
+通过上面的方式就能够创建小数类型的表
+```
+
+***原则：所选择的类型越简单越好，能保证数值的类型越小越好***
+
+#### 字符型
+
+> 较短的文本：
+>
+> char
+>
+> varchar
+>
+> 其他：
+>
+> binary和varbinary用于保存较短的二进制
+>
+> enum用于保存枚举
+>
+> set用于保存集合
+>
+> 较长的文本：
+>
+> text
+>
+> blob(较大的二进制)
+
+1、char和varchar类型（用来保存mysql中较短的字符串）
+
+| 字符串类型 | 最多字符数           | 描述及存储需求        | 特点           | 空间的耗费 | 效率 |
+| ---------- | -------------------- | --------------------- | -------------- | ---------- | ---- |
+| char(M)    | M，可以省略，默认为1 | M为0～255之间的整数   | 固定长度的字符 | 比较耗费   | 高   |
+| varchar(M) | M，不可以省略        | M为0～65535之间的整数 | 可变长度的字符 | 比较节省   | 低   |
+
+***注意：这里指的是字符数，并不是字节数；一个字母a是一个字符，一个中文汉字也是一个字符***
+
+#### 日期
+
+| 日期和时间格式 | 字节 | 最小值              | 最大值              |
+| -------------- | ---- | ------------------- | ------------------- |
+| date           | 4    | 1000-01-01          | 9999-12-31          |
+| datetime       | 8    | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
+| timestamp      | 4    | 19700101080001      | 2038年的某个时刻    |
+| time           | 3    | -838:59:59          | 838:59:59           |
+| year           | 1    | 1901                | 2155                |
+
 
 
 
